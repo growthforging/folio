@@ -5,10 +5,11 @@
 
 **A sleek desktop viewer _and_ editor for Markdown and JSON.**
 
-Double-clicking a `.md` or `.json` shouldn't launch a code editor. Folio renders
-them the way you want to read them — Markdown as a clean, formatted document and
-JSON as a tidy, collapsible tree — and lets you edit them in place. Set it as your
-default app and double-clicking *just works*.
+Open a `.md` and it renders as a clean, formatted document — real headings, tables,
+and syntax-highlighted code instead of raw `#` and `**`. Open a `.json` and explore
+it as a collapsible, color-coded tree instead of a wall of text. Edit either one in
+place and save, switch between light and dark, and set Folio as the default app for
+`.md` / `.json` so your files open here in a single click.
 
 > ⚠️ **Status:** v0.1, but genuinely daily-usable. macOS-focused.
 
