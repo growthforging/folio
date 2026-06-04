@@ -6,22 +6,26 @@ import { open, save } from "@tauri-apps/plugin-dialog";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
+import rehypeSlug from "rehype-slug";
 import "highlight.js/styles/github-dark.css";
 import { JsonView } from "./JsonTree";
+import { CsvTable, CsvEditor } from "./CsvTable";
+import { NotionEditor } from "./NotionEditor";
+import { Outline, type Heading } from "./Outline";
 import { Editor } from "./Editor";
 import "./App.css";
 
 interface Doc {
   path: string;
   name: string;
-  kind: "markdown" | "json" | "text";
+  kind: "markdown" | "json" | "csv" | "text";
   content: string;
   error: string | null;
 }
 
 type Theme = "light" | "dark";
 
-const EXTS = ["md", "markdown", "mdx", "json", "jsonc", "geojson", "txt"];
+const EXTS = ["md", "markdown", "mdx", "json", "jsonc", "geojson", "csv", "tsv", "txt"];
 const isUntitled = (p: string) => p.startsWith("untitled://");
 
 function prettySize(bytes: number): string {
@@ -48,6 +52,13 @@ function docStats(doc: Doc): string {
       return `invalid JSON · ${size}`;
     }
   }
+  if (doc.kind === "csv") {
+    const lines = doc.content.replace(/\r\n?/g, "\n").replace(/\n+$/, "").split("\n");
+    const first = lines[0] ?? "";
+    const delim = first.split("\t").length > first.split(",").length ? "\t" : ",";
+    const cols = first ? first.split(delim).length : 0;
+    return `${Math.max(0, lines.length - 1)} rows × ${cols} cols · ${size}`;
+  }
   return `${doc.content.split("\n").length} lines · ${size}`;
 }
 
@@ -68,7 +79,16 @@ function App() {
   const [query, setQuery] = useState("");
   const [newMenuOpen, setNewMenuOpen] = useState(false);
   const [cleanMode, setCleanMode] = useState(() => localStorage.getItem("folio-clean") !== "0");
+  const [mdMode, setMdMode] = useState<"rich" | "source">(
+    () => (localStorage.getItem("folio-md-mode") as "rich" | "source") || "rich"
+  );
   const newCounter = useRef(0);
+  const proseRef = useRef<HTMLElement | null>(null);
+  const [headings, setHeadings] = useState<Heading[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [showOutline, setShowOutline] = useState(
+    () => localStorage.getItem("folio-outline") !== "0"
+  );
 
   const activeDoc = useMemo(() => docs.find((d) => d.path === active) ?? null, [docs, active]);
 
@@ -84,6 +104,49 @@ function App() {
   useEffect(() => {
     localStorage.setItem("folio-clean", cleanMode ? "1" : "0");
   }, [cleanMode]);
+
+  useEffect(() => {
+    localStorage.setItem("folio-md-mode", mdMode);
+  }, [mdMode]);
+
+  useEffect(() => {
+    localStorage.setItem("folio-outline", showOutline ? "1" : "0");
+  }, [showOutline]);
+
+  // Build the heading outline from the rendered markdown + track the active one.
+  useEffect(() => {
+    setActiveId(null);
+    if (editing || activeDoc?.kind !== "markdown") {
+      setHeadings([]);
+      return;
+    }
+    const root = proseRef.current;
+    if (!root) {
+      setHeadings([]);
+      return;
+    }
+    const els = Array.from(
+      root.querySelectorAll<HTMLElement>("h1,h2,h3,h4,h5,h6")
+    ).filter((h) => h.id);
+    setHeadings(
+      els.map((h) => ({ id: h.id, text: h.textContent || "", level: Number(h.tagName[1]) }))
+    );
+    if (els.length < 2) return;
+    const visible = new Set<string>();
+    const obs = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) visible.add((e.target as HTMLElement).id);
+          else visible.delete((e.target as HTMLElement).id);
+        }
+        const first = els.find((h) => visible.has(h.id));
+        if (first) setActiveId(first.id);
+      },
+      { root, rootMargin: "0px 0px -68% 0px", threshold: 0 }
+    );
+    els.forEach((h) => obs.observe(h));
+    return () => obs.disconnect();
+  }, [activeDoc?.path, activeDoc?.content, activeDoc?.kind, editing]);
 
   const addPaths = useCallback(async (paths: string[]) => {
     if (!paths.length) return;
@@ -238,6 +301,11 @@ function App() {
     (window as unknown as { find?: (...a: unknown[]) => boolean }).find?.(q, false, false, true);
   }, []);
 
+  const jumpTo = useCallback((id: string) => {
+    setActiveId(id);
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const meta = e.metaKey || e.ctrlKey;
@@ -316,7 +384,13 @@ function App() {
                 title={d.path}
               >
                 <span className={`kind kind-${d.kind}`}>
-                  {d.kind === "markdown" ? "MD" : d.kind === "json" ? "{ }" : "TXT"}
+                  {d.kind === "markdown"
+                    ? "MD"
+                    : d.kind === "json"
+                    ? "{ }"
+                    : d.kind === "csv"
+                    ? "CSV"
+                    : "TXT"}
                 </span>
                 <span className="fname">{d.name}</span>
                 <button
@@ -343,7 +417,8 @@ function App() {
               <div className="empty-logo">📄</div>
               <h1>Folio</h1>
               <p>
-                Drop a <strong>.md</strong> or <strong>.json</strong> file here to view it.
+                Drop a <strong>.md</strong>, <strong>.json</strong>, or <strong>.csv</strong> file
+                here to view it.
               </p>
               <button className="primary" onClick={browse}>
                 Open a file…
@@ -377,6 +452,15 @@ function App() {
                 <button className="icon-btn" title="Find (⌘F)" onClick={() => setFindOpen((v) => !v)}>
                   ⌕
                 </button>
+                {activeDoc.kind === "markdown" && !editing && headings.length >= 2 && (
+                  <button
+                    className={`icon-btn${showOutline ? " on" : ""}`}
+                    title="Toggle outline"
+                    onClick={() => setShowOutline((v) => !v)}
+                  >
+                    ▤
+                  </button>
+                )}
                 <button className="icon-btn" title="Zoom out (⌘−)" onClick={() => setZoom((z) => Math.max(0.7, +(z - 0.1).toFixed(2)))}>
                   A−
                 </button>
@@ -410,6 +494,15 @@ function App() {
                     {activeDoc.kind === "json" && (
                       <button className="tb-btn" onClick={formatJson} title="Pretty-print JSON">
                         Format
+                      </button>
+                    )}
+                    {activeDoc.kind === "markdown" && (
+                      <button
+                        className="tb-btn"
+                        onClick={() => setMdMode((m) => (m === "rich" ? "source" : "rich"))}
+                        title="Switch between rich (Notion-style) and source editing"
+                      >
+                        {mdMode === "rich" ? "⌨ Source" : "✦ Rich"}
                       </button>
                     )}
                     <button className="tb-btn" onClick={saveAs}>
@@ -449,18 +542,47 @@ function App() {
             )}
 
             {editing ? (
-              <Editor key={activeDoc.path} value={draft} language={activeDoc.kind} onChange={setDraft} />
+              activeDoc.kind === "csv" ? (
+                <CsvEditor key={activeDoc.path} content={draft} onChange={setDraft} />
+              ) : activeDoc.kind === "markdown" && mdMode === "rich" ? (
+                <NotionEditor key={activeDoc.path} value={draft} onChange={setDraft} />
+              ) : (
+                <Editor
+                  key={activeDoc.path}
+                  value={draft}
+                  language={
+                    activeDoc.kind === "json"
+                      ? "json"
+                      : activeDoc.kind === "markdown"
+                      ? "markdown"
+                      : "text"
+                  }
+                  onChange={setDraft}
+                />
+              )
             ) : activeDoc.error ? (
               <div className="pane json-error">⚠ {activeDoc.error}</div>
             ) : activeDoc.kind === "markdown" ? (
-              <article className="pane prose">
-                <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
-                  {activeDoc.content}
-                </ReactMarkdown>
-              </article>
+              <div className="reading">
+                <article className="pane prose" ref={proseRef}>
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    rehypePlugins={[rehypeSlug, rehypeHighlight]}
+                  >
+                    {activeDoc.content}
+                  </ReactMarkdown>
+                </article>
+                {showOutline && (
+                  <Outline headings={headings} activeId={activeId} onJump={jumpTo} />
+                )}
+              </div>
             ) : activeDoc.kind === "json" ? (
               <div className="pane">
                 <JsonView key={`${activeDoc.path}:${jsonDepth}`} content={activeDoc.content} openDepth={jsonDepth} />
+              </div>
+            ) : activeDoc.kind === "csv" ? (
+              <div className="pane csv-pane">
+                <CsvTable content={activeDoc.content} />
               </div>
             ) : (
               <pre className="pane raw">{activeDoc.content}</pre>

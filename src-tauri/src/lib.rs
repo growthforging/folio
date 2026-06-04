@@ -8,7 +8,7 @@ use tauri::{Emitter, Manager};
 struct Doc {
     path: String,
     name: String,
-    kind: String, // "markdown" | "json" | "text"
+    kind: String, // "markdown" | "json" | "csv" | "text"
     content: String,
     error: Option<String>,
 }
@@ -23,6 +23,8 @@ fn kind_for(path: &str) -> &'static str {
         "markdown"
     } else if lower.ends_with(".json") || lower.ends_with(".jsonc") || lower.ends_with(".geojson") {
         "json"
+    } else if lower.ends_with(".csv") || lower.ends_with(".tsv") {
+        "csv"
     } else {
         "text"
     }

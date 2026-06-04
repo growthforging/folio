@@ -603,3 +603,380 @@ button {
 .link:hover {
   text-decoration: underline;
 }
+
+/* CSV / TSV table */
+.csv-pane {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+.csv-wrap {
+  height: 100%;
+  overflow: auto;
+}
+table.csv {
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: calc(12.5px * var(--scale, 1));
+  line-height: 1.5;
+  width: max-content;
+  min-width: 100%;
+}
+table.csv th,
+table.csv td {
+  border: 1px solid var(--border);
+  padding: 5px 11px;
+  text-align: left;
+  vertical-align: top;
+  white-space: nowrap;
+  max-width: 480px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+table.csv thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--panel-2);
+  color: var(--text);
+  font-weight: 700;
+}
+table.csv tbody tr:nth-child(even) td:not(.csv-rownum) {
+  background: rgba(127, 127, 127, 0.06);
+}
+table.csv tbody tr:hover td:not(.csv-rownum) {
+  background: rgba(127, 127, 127, 0.12);
+}
+.csv-rownum {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--panel);
+  color: var(--muted);
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+}
+table.csv thead .csv-rownum {
+  z-index: 2;
+  background: var(--panel-2);
+}
+.csv-blank {
+  color: var(--muted);
+  font-style: italic;
+  opacity: 0.6;
+}
+.csv-more {
+  padding: 9px 14px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 12px;
+}
+.csv-empty {
+  padding: 28px 36px;
+  color: var(--muted);
+}
+.kind-csv {
+  color: var(--jnum);
+}
+
+/* CSV grid editor */
+.csv-edit {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+  overflow: auto;
+}
+.csv-edit table.csv th,
+.csv-edit table.csv td {
+  max-width: none;
+  overflow: visible;
+  padding: 0;
+}
+.csv-edit table.csv td input,
+.csv-edit table.csv th input {
+  width: 100%;
+  min-width: 130px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: 5px 11px;
+  outline: none;
+}
+.csv-edit table.csv th input {
+  font-weight: 700;
+}
+.csv-edit table.csv td:focus-within,
+.csv-edit table.csv th:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  background: var(--bg);
+}
+.csv-edit .csv-rownum {
+  position: static;
+  padding: 0 7px;
+  white-space: nowrap;
+}
+.csv-edit .csv-rownum .csv-n {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.csv-delrow {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  opacity: 0;
+  font-size: 14px;
+  line-height: 1;
+  margin-left: 5px;
+}
+.csv-edit tbody tr:hover .csv-delrow {
+  opacity: 0.7;
+}
+.csv-delrow:hover {
+  opacity: 1 !important;
+  color: var(--red);
+}
+.csv-tool {
+  border: none !important;
+  padding: 2px 6px !important;
+}
+.csv-tool button {
+  border: 1px dashed var(--border-2);
+  background: transparent;
+  color: var(--muted);
+  border-radius: 6px;
+  width: 22px;
+  height: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+.csv-tool button:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+.csv-edit-actions {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 14px;
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+  z-index: 3;
+}
+.csv-edit-actions > button {
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--text);
+  border-radius: 7px;
+  padding: 5px 11px;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.csv-edit-actions > button:hover {
+  border-color: var(--border-2);
+}
+.csv-edit-hint {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* Notion-style editor (Milkdown Crepe) — variables mapped to Folio's palette
+   so it follows the app's light/dark toggle automatically. */
+.folio-crepe {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: var(--bg);
+  --crepe-color-background: var(--bg);
+  --crepe-color-on-background: var(--text);
+  --crepe-color-surface: var(--panel);
+  --crepe-color-surface-low: var(--panel-2);
+  --crepe-color-on-surface: var(--text);
+  --crepe-color-on-surface-variant: var(--muted);
+  --crepe-color-outline: var(--border-2);
+  --crepe-color-primary: var(--accent);
+  --crepe-color-secondary: var(--panel-2);
+  --crepe-color-on-secondary: var(--text);
+  --crepe-color-inverse: var(--text);
+  --crepe-color-on-inverse: var(--bg);
+  --crepe-color-inline-code: var(--jnum);
+  --crepe-color-error: var(--red);
+  --crepe-color-hover: var(--panel-2);
+  --crepe-color-selected: rgba(110, 168, 254, 0.22);
+  --crepe-color-inline-area: var(--panel-2);
+  --crepe-font-title: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+    system-ui, sans-serif;
+  --crepe-font-default: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+    system-ui, sans-serif;
+  --crepe-font-code: var(--mono);
+  --crepe-shadow-1: 0 1px 3px rgba(0, 0, 0, 0.18);
+  --crepe-shadow-2: 0 8px 28px rgba(0, 0, 0, 0.28);
+}
+.folio-crepe .milkdown {
+  height: 100%;
+  padding: 0;
+}
+/* Match the read-only `.prose` view 1:1 — same column, font, sizes, spacing. */
+.folio-crepe .milkdown .ProseMirror {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 28px 36px 48px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  font-size: calc(15px * var(--scale, 1));
+  line-height: 1.65;
+  caret-color: var(--accent);
+}
+.folio-crepe .milkdown .ProseMirror:focus {
+  outline: none;
+}
+.folio-crepe .milkdown .ProseMirror > :first-child {
+  margin-top: 0;
+}
+.folio-crepe .milkdown .ProseMirror h1,
+.folio-crepe .milkdown .ProseMirror h2,
+.folio-crepe .milkdown .ProseMirror h3,
+.folio-crepe .milkdown .ProseMirror h4,
+.folio-crepe .milkdown .ProseMirror h5,
+.folio-crepe .milkdown .ProseMirror h6 {
+  line-height: 1.25;
+  margin: 1.6em 0 0.6em;
+  font-weight: 650;
+  padding: 0;
+}
+.folio-crepe .milkdown .ProseMirror h1 {
+  font-size: 1.8em;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.3em;
+}
+.folio-crepe .milkdown .ProseMirror h2 {
+  font-size: 1.45em;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.25em;
+}
+.folio-crepe .milkdown .ProseMirror h3 {
+  font-size: 1.2em;
+}
+.folio-crepe .milkdown .ProseMirror h4,
+.folio-crepe .milkdown .ProseMirror h5,
+.folio-crepe .milkdown .ProseMirror h6 {
+  font-size: 1em;
+}
+.folio-crepe .milkdown .ProseMirror p {
+  margin: 0.8em 0;
+  padding: 0;
+  font-size: calc(15px * var(--scale, 1));
+  line-height: 1.65;
+}
+.folio-crepe .milkdown .ProseMirror ul,
+.folio-crepe .milkdown .ProseMirror ol {
+  padding-left: 1.5em;
+  margin: 0.7em 0;
+}
+.folio-crepe .milkdown .ProseMirror li {
+  margin: 0.3em 0;
+}
+.folio-crepe .milkdown .ProseMirror a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.folio-crepe .milkdown .ProseMirror :not(pre) > code {
+  font-family: var(--mono);
+  font-size: 0.88em;
+  background: var(--panel-2);
+  padding: 0.15em 0.4em;
+  border-radius: 5px;
+}
+.folio-crepe .milkdown .ProseMirror blockquote {
+  margin: 1em 0;
+  padding: 0.2em 1em;
+  border-left: 3px solid var(--border-2);
+  color: var(--muted);
+}
+.folio-crepe .milkdown .ProseMirror hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1.6em 0;
+}
+.folio-crepe .milkdown .ProseMirror table {
+  border-collapse: collapse;
+  margin: 1em 0;
+}
+.folio-crepe .milkdown .ProseMirror th,
+.folio-crepe .milkdown .ProseMirror td {
+  border: 1px solid var(--border);
+  padding: 7px 12px;
+}
+.folio-crepe .milkdown .ProseMirror th {
+  background: var(--panel-2);
+  font-weight: 650;
+}
+/* fenced code blocks (Crepe renders these with CodeMirror) — keep compact */
+.folio-crepe .milkdown .cm-editor,
+.folio-crepe .milkdown pre {
+  font-size: calc(13px * var(--scale, 1));
+}
+
+/* Reading layout: document + right-side outline */
+.reading {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+.reading .pane {
+  flex: 1;
+}
+.outline {
+  width: 230px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 16px 8px 24px;
+  background: var(--panel);
+}
+.outline-head {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-weight: 700;
+  padding: 0 10px 8px;
+}
+.outline-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.outline-item {
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: var(--muted);
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  border-left: 2px solid transparent;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.outline-item:hover {
+  background: var(--panel-2);
+  color: var(--text);
+}
+.outline-item.active {
+  color: var(--accent);
+  border-left-color: var(--accent);
+  background: var(--panel-2);
+}
+.icon-btn.on {
+  color: var(--accent);
+  background: var(--panel-2);
+}

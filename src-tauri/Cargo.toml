@@ -1,7 +1,7 @@
 [package]
 name = "folio"
-version = "0.1.0"
-description = "A sleek desktop viewer and editor for Markdown and JSON files"
+version = "0.2.0"
+description = "A sleek desktop viewer and editor for Markdown, JSON, and CSV files"
 authors = ["growthforging"]
 license = "MIT"
 edition = "2021"
