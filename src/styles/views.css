@@ -1,12 +1,14 @@
 /* Raw text --------------------------------------------------------------- */
 .raw {
-  margin: 0;
-  padding: 32px 40px 120px;
-  font-family: var(--font-mono);
-  font-size: calc(12.5px * var(--scale, 1));
-  line-height: 1.65;
+  max-width: calc(680px * var(--scale, 1) + 96px);
+  margin: 0 auto;
+  padding: 44px 48px 140px;
+  font-family: var(--font-prose);
+  font-size: calc(16px * var(--scale, 1));
+  line-height: 1.7;
   white-space: pre-wrap;
-  word-break: break-word;
+  overflow-wrap: break-word;
+  tab-size: 4;
   color: var(--text);
 }
 
@@ -283,6 +285,19 @@ table.csv thead .csv-rownum {
 .cm-host .cm-editor .cm-content {
   padding: 24px 28px 140px;
   caret-color: var(--accent);
+}
+.cm-host.txt .cm-editor .cm-scroller {
+  font-family: var(--font-prose);
+  font-size: calc(16px * var(--scale, 1));
+  line-height: 1.7;
+}
+.cm-host.txt .cm-editor .cm-content {
+  max-width: calc(680px * var(--scale, 1) + 96px);
+  margin: 0 auto;
+  padding: 44px 48px 160px;
+}
+.cm-host.txt .cm-editor .cm-activeLine {
+  background: transparent;
 }
 .cm-host.md .cm-editor .cm-content {
   max-width: calc(760px * var(--scale, 1));

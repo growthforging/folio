@@ -166,5 +166,10 @@ export const Editor = forwardRef<EditorHandle, Props>(function Editor(
     }
   }, [value]);
 
-  return <div className={`cm-host${language === "markdown" ? " md" : ""}`} ref={host} />;
+  return (
+    <div
+      className={`cm-host${language === "markdown" ? " md" : ""}${language === "text" ? " txt" : ""}`}
+      ref={host}
+    />
+  );
 });
