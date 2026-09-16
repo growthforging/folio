@@ -45,7 +45,7 @@ controls and a translucent sidebar.</sub>
   documents, with fuzzy search.
 - **A native macOS shell.** Inset traffic lights, a translucent sidebar, a real menu bar
   with keyboard shortcuts, native save and confirm dialogs, and "Open with Folio" for
-  `.md`, `.json`, and `.csv`.
+  `.md`, `.json`, `.csv`, and `.txt`.
 - **Light, dark, or system appearance.** Switching animates out from the button, and the
   window chrome follows.
 - **Recents, drag and drop, zoom, reveal in Finder.** And nothing leaves your machine:
@@ -74,6 +74,7 @@ controls and a translucent sidebar.</sub>
 | `.md` `.markdown` `.mdx` `.mdown` | formatted Markdown + outline |
 | `.json` `.jsonc` `.geojson` | collapsible JSON tree |
 | `.csv` `.tsv` | aligned, editable table |
+| `.txt` `.text` `.log` | plain text |
 | anything else | plain text |
 
 ## Make it your default app
@@ -84,7 +85,7 @@ npm run tauri build           # produces Folio.app
 
 Move `src-tauri/target/release/bundle/macos/Folio.app` into **/Applications**, then in
 Finder: right-click a `.md` → **Get Info** → **Open with: Folio** → **Change All…**
-(repeat for `.json` and `.csv`). Double-clicking those files now opens Folio.
+(repeat for `.json`, `.csv`, and `.txt`). Double-clicking those files now opens Folio.
 
 ## Install / run from source
 

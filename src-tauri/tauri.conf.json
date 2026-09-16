@@ -46,7 +46,8 @@
     "fileAssociations": [
       { "ext": ["md", "markdown", "mdx", "mdown"], "name": "Markdown Document", "role": "Editor" },
       { "ext": ["json", "jsonc", "geojson"], "name": "JSON Document", "role": "Editor" },
-      { "ext": ["csv", "tsv"], "name": "Delimited Text", "role": "Editor" }
+      { "ext": ["csv", "tsv"], "name": "Delimited Text", "role": "Editor" },
+      { "ext": ["txt", "text", "log"], "name": "Plain Text", "role": "Editor" }
     ]
   }
 }
