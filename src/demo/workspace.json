@@ -1,0 +1,44 @@
+{
+  "name": "folio-workspace",
+  "version": "0.3.0",
+  "private": true,
+  "description": "Sample workspace manifest used to demonstrate the JSON tree.",
+  "author": {
+    "name": "Ada Lovelace",
+    "email": "ada@example.com",
+    "url": "https://example.com/ada"
+  },
+  "settings": {
+    "theme": "system",
+    "zoom": 1,
+    "sidebar": {
+      "visible": true,
+      "width": 248
+    },
+    "editor": {
+      "mode": "rich",
+      "lineWrapping": true,
+      "tabSize": 2,
+      "autosave": null
+    }
+  },
+  "recent": [
+    { "path": "~/Notes/roadmap.md", "kind": "markdown", "openedAt": "2026-09-14T09:12:00Z" },
+    { "path": "~/Data/orders.csv", "kind": "csv", "openedAt": "2026-09-13T17:40:00Z" },
+    { "path": "~/Projects/api/schema.json", "kind": "json", "openedAt": "2026-09-12T11:05:00Z" }
+  ],
+  "fileAssociations": [
+    { "ext": ["md", "markdown", "mdx"], "role": "Editor", "default": true },
+    { "ext": ["json", "jsonc", "geojson"], "role": "Editor", "default": true },
+    { "ext": ["csv", "tsv"], "role": "Editor", "default": false }
+  ],
+  "limits": {
+    "csvPreviewRows": 2000,
+    "findMatches": 3000,
+    "maxFileSizeMB": 64.5
+  },
+  "flags": {
+    "telemetry": false,
+    "experimentalTables": true
+  }
+}

@@ -1,0 +1,506 @@
+/* Raw text --------------------------------------------------------------- */
+.raw {
+  margin: 0;
+  padding: 32px 40px 120px;
+  font-family: var(--font-mono);
+  font-size: calc(12.5px * var(--scale, 1));
+  line-height: 1.65;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text);
+}
+
+/* JSON tree -------------------------------------------------------------- */
+.json-pane {
+  padding: 22px 28px 120px;
+}
+.json {
+  font-family: var(--font-mono);
+  font-size: calc(12.5px * var(--scale, 1));
+  line-height: 1.75;
+}
+.jrow {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  padding: 0 32px 0 4px;
+  border-radius: 5px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.jrow:hover {
+  background: var(--fill-1);
+}
+.jcaret {
+  flex: none;
+  width: 16px;
+  height: calc(1.75em);
+  display: inline-grid;
+  place-items: center;
+  color: var(--text-3);
+}
+.jcaret svg {
+  transition: transform var(--t-fast) var(--ease-out);
+}
+.jcaret.open svg {
+  transform: rotate(90deg);
+}
+.jkids {
+  margin-left: 11px;
+  padding-left: 9px;
+  border-left: 1px solid var(--line);
+}
+.jkey {
+  color: var(--j-key);
+}
+.jkey.idx {
+  color: var(--text-3);
+}
+.jpunct {
+  color: var(--text-3);
+}
+.jstr {
+  color: var(--j-str);
+}
+.jnum {
+  color: var(--j-num);
+}
+.jbool,
+.jnull {
+  color: var(--j-bool);
+}
+.jcount {
+  color: var(--text-3);
+  font-family: var(--font-ui);
+  font-size: 0.9em;
+  margin: 0 6px;
+}
+.jcopy {
+  position: absolute;
+  right: 4px;
+  top: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  display: grid;
+  place-items: center;
+  color: var(--text-3);
+  opacity: 0;
+  transition: opacity var(--t-fast) ease, background var(--t-fast) ease, color var(--t-fast) ease;
+}
+.jrow:hover .jcopy {
+  opacity: 1;
+}
+.jcopy:hover {
+  background: var(--fill-2);
+  color: var(--text);
+}
+
+/* CSV table -------------------------------------------------------------- */
+table.csv {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: max-content;
+  min-width: 100%;
+  font-family: var(--font-ui);
+  font-size: calc(12.5px * var(--scale, 1));
+  line-height: 1.45;
+}
+table.csv th,
+table.csv td {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+  white-space: nowrap;
+  max-width: 440px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+table.csv thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--bg-inset);
+  font-weight: 600;
+  font-size: 0.92em;
+  color: var(--text-2);
+  box-shadow: inset 0 -1px 0 var(--line);
+}
+table.csv td.num,
+table.csv th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+table.csv tbody tr:hover td {
+  background: var(--fill-1);
+}
+.csv-rownum {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--bg);
+  color: var(--text-3);
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.88em;
+  min-width: 46px;
+  -webkit-user-select: none;
+  user-select: none;
+}
+table.csv tbody tr:hover .csv-rownum {
+  background: var(--bg);
+  color: var(--text-2);
+}
+table.csv thead .csv-rownum {
+  z-index: 3;
+  background: var(--bg-inset);
+}
+.csv-blank {
+  color: var(--text-3);
+  font-style: italic;
+}
+.csv-more {
+  position: sticky;
+  left: 0;
+  bottom: 0;
+  padding: 8px 14px;
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-top: 1px solid var(--line);
+  font-size: 11.5px;
+  color: var(--text-3);
+}
+.csv-empty {
+  padding: 40px;
+  color: var(--text-3);
+}
+
+/* CSV grid editor */
+.csv-edit table.csv th,
+.csv-edit table.csv td {
+  padding: 0;
+  max-width: none;
+  overflow: visible;
+}
+.csv-edit input {
+  width: 100%;
+  min-width: 120px;
+  border: 0;
+  background: transparent;
+  padding: 6px 12px;
+  outline: 0;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+}
+.csv-edit th input {
+  font-weight: 600;
+}
+.csv-edit td:focus-within,
+.csv-edit th:focus-within {
+  box-shadow: inset 0 0 0 2px var(--accent);
+  background: var(--bg);
+}
+.csv-edit .csv-rownum {
+  padding: 0 4px 0 8px;
+  white-space: nowrap;
+}
+.csv-edit .csv-rownum .csv-n {
+  display: inline-block;
+  min-width: 18px;
+  padding: 6px 0;
+}
+.csv-delrow {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  display: inline-grid;
+  place-items: center;
+  vertical-align: middle;
+  color: var(--text-3);
+  opacity: 0;
+  margin-left: 2px;
+  transition: opacity var(--t-fast) ease;
+}
+.csv-edit tbody tr:hover .csv-delrow {
+  opacity: 1;
+}
+.csv-delrow:hover {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  color: var(--danger);
+}
+.csv-tool {
+  padding: 0 4px !important;
+  border-right: 0 !important;
+}
+.csv-tool .ibtn {
+  width: 24px;
+  height: 24px;
+  color: var(--text-3);
+}
+.csv-edit-actions {
+  position: sticky;
+  left: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-top: 1px solid var(--line);
+  z-index: 3;
+}
+.csv-edit-hint {
+  color: var(--text-3);
+  font-size: 11.5px;
+}
+
+/* CodeMirror ------------------------------------------------------------- */
+.cm-host {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+.cm-host .cm-editor {
+  height: 100%;
+}
+.cm-host .cm-editor.cm-focused {
+  outline: none;
+}
+.cm-host .cm-editor .cm-scroller {
+  font-family: var(--font-mono);
+  font-size: calc(13px * var(--scale, 1));
+  line-height: 1.7;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.cm-host .cm-editor .cm-content {
+  padding: 24px 28px 140px;
+  caret-color: var(--accent);
+}
+.cm-host.md .cm-editor .cm-content {
+  max-width: calc(760px * var(--scale, 1));
+  margin: 0 auto;
+  padding: 40px 36px 160px;
+}
+.cm-host .cm-editor .cm-gutters {
+  background: transparent;
+  border: 0;
+  color: var(--text-3);
+  padding-left: 8px;
+}
+.cm-host .cm-editor .cm-lineNumbers .cm-gutterElement {
+  padding: 0 10px 0 4px;
+  font-variant-numeric: tabular-nums;
+}
+.cm-host .cm-editor .cm-activeLineGutter {
+  background: transparent;
+  color: var(--text-2);
+}
+.cm-host .cm-editor .cm-activeLine {
+  background: var(--fill-1);
+  border-radius: 3px;
+}
+.cm-host.md .cm-editor .cm-activeLine {
+  background: transparent;
+}
+.cm-host .cm-editor .cm-selectionBackground,
+.cm-host .cm-editor.cm-focused .cm-selectionBackground {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.cm-host .cm-editor .cm-cursor,
+.cm-host .cm-editor .cm-dropCursor {
+  border-left: 2px solid var(--accent);
+}
+.cm-host .cm-editor .cm-matchingBracket {
+  background: var(--fill-2);
+  border-radius: 2px;
+}
+.cm-host .cm-editor .cm-selectionMatch {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.cm-host .cm-editor .cm-searchMatch {
+  background: color-mix(in srgb, var(--find) 70%, transparent);
+  border-radius: 2px;
+}
+.cm-host .cm-editor .cm-searchMatch.cm-searchMatch-selected {
+  background: var(--find-current);
+}
+.cm-host .cm-editor .cm-foldGutter .cm-gutterElement {
+  padding: 0 4px;
+}
+.cm-host .cm-fold {
+  display: inline-grid;
+  place-items: center;
+  width: 14px;
+  height: 100%;
+  color: var(--text-3);
+  opacity: 0;
+  transition: opacity var(--t-fast) ease, transform var(--t-fast) var(--ease-out);
+}
+.cm-host .cm-fold.open {
+  transform: rotate(90deg);
+}
+.cm-host .cm-editor .cm-gutters:hover .cm-fold,
+.cm-host .cm-fold:not(.open) {
+  opacity: 1;
+}
+.cm-host .cm-editor .cm-foldPlaceholder {
+  background: var(--fill-2);
+  border: 0;
+  border-radius: 4px;
+  color: var(--text-2);
+  padding: 0 6px;
+  margin: 0 4px;
+}
+/* search panel */
+.cm-host .cm-editor .cm-panels {
+  background: var(--bg-inset);
+  color: var(--text);
+  border: 0;
+}
+.cm-host .cm-editor .cm-panels.cm-panels-top {
+  border-bottom: 1px solid var(--line);
+}
+.cm-host .cm-editor .cm-panel.cm-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+}
+.cm-host .cm-editor .cm-panel.cm-search br {
+  display: none;
+}
+.cm-host .cm-editor .cm-panel.cm-search input[type="text"] {
+  height: 26px;
+  padding: 0 8px;
+  border-radius: var(--r-sm);
+  border: 0;
+  background: var(--bg);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  font: inherit;
+  color: var(--text);
+  outline: 0;
+}
+.cm-host .cm-editor .cm-panel.cm-search input[type="text"]:focus {
+  box-shadow: inset 0 0 0 1px var(--accent), 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.cm-host .cm-editor .cm-panel.cm-search button {
+  height: 26px;
+  padding: 0 9px;
+  border-radius: var(--r-sm);
+  border: 0;
+  background: var(--bg-elev);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  font: inherit;
+  font-size: 12px;
+  color: var(--text);
+  text-transform: none;
+  cursor: default;
+}
+.cm-host .cm-editor .cm-panel.cm-search button:hover {
+  background: var(--fill-1);
+}
+.cm-host .cm-editor .cm-panel.cm-search button[name="close"] {
+  position: static;
+  width: 26px;
+  padding: 0;
+  margin-left: auto;
+  font-size: 14px;
+  color: var(--text-2);
+}
+.cm-host .cm-editor .cm-panel.cm-search label {
+  color: var(--text-2);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+.cm-host .cm-editor .cm-panel.cm-search input[type="checkbox"] {
+  accent-color: var(--accent);
+  margin: 0;
+}
+
+/* Outline ---------------------------------------------------------------- */
+.outline {
+  position: relative;
+  flex: none;
+  width: 232px;
+  border-left: 1px solid var(--line);
+  overflow: hidden;
+  background: var(--bg);
+  transition: width var(--t-slow) var(--ease-out), opacity var(--t-base) ease,
+    border-color var(--t-base) ease;
+}
+.outline.hidden {
+  width: 0;
+  opacity: 0;
+  border-left-color: transparent;
+}
+.ol-inner {
+  width: 232px;
+  height: 100%;
+  overflow-y: auto;
+  padding: 18px 12px 24px 14px;
+}
+.ol-head {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-3);
+  padding: 0 8px 8px;
+}
+.ol-list {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ol-rail {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+  opacity: 0;
+  transition: transform var(--t-base) var(--ease-out), height var(--t-base) var(--ease-out),
+    opacity var(--t-fast) ease;
+}
+.ol-rail.on {
+  opacity: 1;
+}
+.ol-item {
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: var(--text-2);
+  padding: 5px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color var(--t-fast) ease, background var(--t-fast) ease;
+}
+.ol-item:hover {
+  background: var(--fill-1);
+  color: var(--text);
+}
+.ol-item.active {
+  color: var(--text);
+  font-weight: 500;
+}
+@media (max-width: 860px) {
+  .outline {
+    display: none;
+  }
+}

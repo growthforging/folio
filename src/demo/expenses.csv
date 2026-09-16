@@ -1,0 +1,21 @@
+Date,Category,Description,Amount,Currency,Reconciled
+2026-09-01,Software,Figma Professional (monthly),15.00,USD,yes
+2026-09-01,Hosting,Vercel Pro,20.00,USD,yes
+2026-09-02,Travel,Train to Berlin,89.90,EUR,yes
+2026-09-02,Meals,Lunch with contractor,42.50,EUR,no
+2026-09-03,Hardware,USB-C dock,129.00,USD,yes
+2026-09-04,Software,1Password Teams,7.99,USD,yes
+2026-09-05,Office,Standing desk mat,64.00,USD,no
+2026-09-06,Travel,Taxi to airport,38.20,EUR,yes
+2026-09-07,Meals,Team dinner,214.80,EUR,no
+2026-09-08,Software,Linear (5 seats),40.00,USD,yes
+2026-09-09,Hosting,Cloudflare Workers,5.00,USD,yes
+2026-09-10,Hardware,Mechanical keyboard,149.00,USD,no
+2026-09-11,Office,Printer paper (5 reams),27.45,USD,yes
+2026-09-12,Software,"Notion Plus, annual",96.00,USD,yes
+2026-09-13,Travel,Hotel (2 nights),318.00,EUR,no
+2026-09-13,Meals,Coffee and pastries,11.60,EUR,yes
+2026-09-14,Software,GitHub Team,16.00,USD,yes
+2026-09-15,Office,Whiteboard markers,9.99,USD,yes
+2026-09-15,Hosting,Domain renewal (folio.app),14.00,USD,yes
+2026-09-16,Hardware,Monitor arm,89.00,USD,no

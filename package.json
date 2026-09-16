@@ -1,7 +1,7 @@
 {
   "name": "folio",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A sleek desktop viewer & editor for Markdown, JSON, and CSV — built with Tauri + React.",
   "license": "MIT",
   "type": "module",
@@ -26,6 +26,7 @@
     "@tauri-apps/plugin-opener": "^2",
     "codemirror": "^6.0.2",
     "highlight.js": "^11.11.1",
+    "lucide-react": "^1.46.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-markdown": "^10.1.0",
