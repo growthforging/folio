@@ -1,4 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type RefObject,
+} from "react";
 import { flushSync } from "react-dom";
 import {
   Braces,
@@ -51,9 +60,10 @@ import {
   kindFor,
   setHome,
   type Doc,
+  type DocKind,
   type Recent,
 } from "./lib/docs";
-import { useMediaQuery, usePersisted, useReducedMotion } from "./lib/hooks";
+import { useMediaQuery, usePersisted, usePresence, useReducedMotion } from "./lib/hooks";
 import {
   IS_TAURI,
   confirmDialog,
@@ -112,6 +122,7 @@ export default function App() {
   const [editing, setEditing] = useState(DEMO_EDIT !== null && DEMO_DOC !== null);
   const [draft, setDraft] = useState(DEMO_EDIT !== null && DEMO_DOC ? DEMO_DOC.content : "");
   const [jsonDepth, setJsonDepth] = useState(2);
+  const [editorReady, setEditorReady] = useState(false);
   const [findOpen, setFindOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -119,15 +130,60 @@ export default function App() {
 
   const newCounter = useRef(0);
   const proseRef = useRef<HTMLElement | null>(null);
+  const ghostProseRef = useRef<HTMLElement | null>(null);
   const scrollerRef = useRef<HTMLElement | null>(null);
+  const ghostRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<HTMLDivElement | null>(null);
   const editorRef = useRef<EditorHandle | null>(null);
+
+  /* The editors report every keystroke synchronously into `draftRef`; React
+     state follows a beat later so typing never waits on a full re-render. */
+  const draftRef = useRef(DEMO_EDIT !== null && DEMO_DOC ? DEMO_DOC.content : "");
+  const draftTimer = useRef(0);
+  const updateDraft = useCallback((v: string) => {
+    draftRef.current = v;
+    if (draftTimer.current) window.clearTimeout(draftTimer.current);
+    draftTimer.current = window.setTimeout(() => {
+      draftTimer.current = 0;
+      setDraft(v);
+    }, 80);
+  }, []);
+  const resetDraft = useCallback((v: string) => {
+    if (draftTimer.current) window.clearTimeout(draftTimer.current);
+    draftTimer.current = 0;
+    draftRef.current = v;
+    setDraft(v);
+  }, []);
+
+  /* Scroll position carried across view switches (read ↔ edit, rich ↔ source). */
+  type Layout = "prose" | "other";
+  const pendingScroll = useRef<{ top: number; ratio: number; layout: Layout } | null>(null);
+  const layoutOf = (edit: boolean, mode: MdMode, kind?: DocKind): Layout =>
+    kind === "markdown" && (!edit || mode === "rich") ? "prose" : "other";
+  const applyScroll = useCallback((el: HTMLElement | null, layout: Layout, consume: boolean) => {
+    const memo = pendingScroll.current;
+    if (!el || !memo) return;
+    const max = Math.max(0, el.scrollHeight - el.clientHeight);
+    el.scrollTop = memo.layout === "prose" && layout === "prose" ? Math.min(memo.top, max) : memo.ratio * max;
+    if (consume) pendingScroll.current = null;
+  }, []);
 
   const activeDoc = useMemo(() => docs.find((d) => d.path === active) ?? null, [docs, active]);
   const dirty = editing && activeDoc !== null && draft !== activeDoc.content;
   const dirtyRef = useRef(false);
   dirtyRef.current = dirty;
   const stats = useMemo(() => (activeDoc ? docStats(activeDoc) : []), [activeDoc]);
+  const captureScroll = useCallback(() => {
+    const el = scrollerRef.current;
+    if (!el || !activeDoc) return;
+    const max = Math.max(0, el.scrollHeight - el.clientHeight);
+    pendingScroll.current = {
+      top: el.scrollTop,
+      ratio: max > 0 ? el.scrollTop / max : 0,
+      layout: layoutOf(editing, mdMode, activeDoc.kind),
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeDoc, editing, mdMode]);
   const reading = activeDoc?.kind === "markdown" && !editing && !activeDoc.error;
   const { headings, activeId, setActiveId } = useHeadings(
     scrollerRef,
@@ -232,6 +288,7 @@ export default function App() {
     async (path: string) => {
       if (path === active) return;
       if (!(await discardIfDirty())) return;
+      pendingScroll.current = null;
       setEditing(false);
       setActive(path);
     },
@@ -286,19 +343,21 @@ export default function App() {
       const content = kind === "json" ? "{\n  \n}\n" : "# Untitled\n\n";
       setDocs((prev) => [...prev, { path, name, kind, content, error: null, size: byteLength(content), modified: Date.now() }]);
       setActive(path);
-      setDraft(content);
+      pendingScroll.current = null;
+      resetDraft(content);
       setEditing(true);
       setFindOpen(false);
     },
-    [discardIfDirty]
+    [discardIfDirty, resetDraft]
   );
 
   const startEdit = useCallback(() => {
     if (!activeDoc || activeDoc.error) return;
-    setDraft(activeDoc.content);
+    captureScroll();
+    resetDraft(activeDoc.content);
     setEditing(true);
     setFindOpen(false);
-  }, [activeDoc]);
+  }, [activeDoc, captureScroll, resetDraft]);
 
   const saveDoc = useCallback(
     async (as: boolean): Promise<boolean> => {
@@ -309,46 +368,49 @@ export default function App() {
         if (!picked) return false;
         path = picked;
       }
+      const text = draftRef.current;
       try {
-        await writeDoc(path, draft);
+        await writeDoc(path, text);
       } catch (e) {
         toast(String(e), "err");
         return false;
       }
+      resetDraft(text);
       const now = Date.now();
-      const size = byteLength(draft);
+      const size = byteLength(text);
       if (path !== activeDoc.path) {
         const name = baseName(path);
-        const updated: Doc = { ...activeDoc, path, name, kind: kindFor(name), content: draft, error: null, modified: now, size };
+        const updated: Doc = { ...activeDoc, path, name, kind: kindFor(name), content: text, error: null, modified: now, size };
         setDocs((prev) => prev.map((d) => (d.path === activeDoc.path ? updated : d)));
         setActive(path);
         pushRecent(updated);
       } else {
-        setDocs((prev) => prev.map((d) => (d.path === path ? { ...d, content: draft, modified: now, size } : d)));
+        setDocs((prev) => prev.map((d) => (d.path === path ? { ...d, content: text, modified: now, size } : d)));
       }
       toast(isVirtual(path) ? "Downloaded" : "Saved");
       return true;
     },
-    [activeDoc, editing, draft, pushRecent]
+    [activeDoc, editing, pushRecent, resetDraft]
   );
 
   const finishEdit = useCallback(async () => {
     if (!editing || !activeDoc) return;
-    if (dirty) {
+    if (draftRef.current !== activeDoc.content) {
       const save = await confirmDialog(`Save changes to ${activeDoc.name}?`, { ok: "Save", cancel: "Don't Save" });
       if (save && !(await saveDoc(false))) return;
     }
+    captureScroll();
     setEditing(false);
-  }, [editing, activeDoc, dirty, saveDoc]);
+  }, [editing, activeDoc, saveDoc, captureScroll]);
 
   const formatJson = useCallback(() => {
     try {
-      setDraft(JSON.stringify(JSON.parse(draft), null, 2) + "\n");
+      resetDraft(JSON.stringify(JSON.parse(draftRef.current), null, 2) + "\n");
       toast("Formatted");
     } catch {
       toast("Not valid JSON yet", "err");
     }
-  }, [draft]);
+  }, [resetDraft]);
 
   const copyText = useCallback((text: string, label: string) => {
     void navigator.clipboard?.writeText(text).catch(() => {});
@@ -410,7 +472,7 @@ export default function App() {
           if (target && !isVirtual(target)) revealInFinder(target);
           break;
         case "copy":
-          if (activeDoc) copyText(editing ? draft : activeDoc.content, "Copied contents");
+          if (activeDoc) copyText(editing ? draftRef.current : activeDoc.content, "Copied contents");
           break;
         case "copy-path":
           if (target && !isUntitled(target)) copyText(target, "Copied path");
@@ -452,12 +514,15 @@ export default function App() {
           setJsonDepth(1);
           break;
         case "md-rich":
+          if (editing) captureScroll();
           setMdMode("rich");
           break;
         case "md-source":
+          if (editing) captureScroll();
           setMdMode("source");
           break;
         case "md-toggle":
+          if (editing) captureScroll();
           setMdMode((m) => (m === "rich" ? "source" : "rich"));
           break;
         case "theme-light":
@@ -489,7 +554,7 @@ export default function App() {
       active,
       activeDoc,
       editing,
-      draft,
+      captureScroll,
       addDocs,
       newDoc,
       closeDoc,
@@ -636,6 +701,24 @@ export default function App() {
   const appStyle = { "--scale": zoom, "--sb-w": `${sidebarWidth}px` } as CSSProperties;
   const viewKey = activeDoc ? `${activeDoc.path}:${editing ? `edit-${mdMode}` : "read"}` : "";
   const findKey = activeDoc ? `${viewKey}:${activeDoc.content.length}` : "";
+  const richEditing = editing && activeDoc?.kind === "markdown" && mdMode === "rich";
+  const showGhost = richEditing && !editorReady;
+  const ghost = usePresence(showGhost, 240);
+
+  // A new view: restore the carried scroll position. The rich editor and the
+  // code editor restore their own once they have mounted.
+  useLayoutEffect(() => {
+    setEditorReady(false);
+    if (!activeDoc) return;
+    if (richEditing) {
+      applyScroll(ghostRef.current, "prose", false);
+      return;
+    }
+    if (!editing || activeDoc.kind === "csv") {
+      applyScroll(scrollerRef.current, layoutOf(editing, mdMode, activeDoc.kind), true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewKey]);
 
   return (
     <div className={`app${sidebarOpen ? "" : " sb-closed"}${hasDocs ? "" : " no-docs"}`} style={appStyle}>
@@ -672,24 +755,43 @@ export default function App() {
             <div className="view" key={viewKey} ref={viewRef}>
               {editing ? (
                 activeDoc.kind === "csv" ? (
-                  <div className="pane" ref={scrollerRef as React.RefObject<HTMLDivElement>}>
-                    <CsvEditor content={draft} onChange={setDraft} />
+                  <div className="pane" ref={scrollerRef as RefObject<HTMLDivElement>}>
+                    <CsvEditor content={draft} onChange={updateDraft} />
                   </div>
-                ) : activeDoc.kind === "markdown" && mdMode === "rich" ? (
-                  <NotionEditor value={draft} onChange={setDraft} scrollRef={scrollerRef} />
+                ) : richEditing ? (
+                  <div className="edit-stack">
+                    <NotionEditor
+                      value={draft}
+                      onChange={updateDraft}
+                      scrollRef={scrollerRef}
+                      onReady={() => {
+                        applyScroll(scrollerRef.current, "prose", true);
+                        setEditorReady(true);
+                      }}
+                    />
+                    {(showGhost || ghost.mounted) && (
+                      <div className={`pane ghost${ghost.exiting ? " exit" : ""}`} ref={ghostRef} aria-hidden="true">
+                        <div className="prose-wrap">
+                          <MarkdownView content={draftRef.current} proseRef={ghostProseRef} />
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <Editor
                     ref={editorRef}
                     value={draft}
                     language={activeDoc.kind === "json" ? "json" : activeDoc.kind === "markdown" ? "markdown" : "text"}
-                    onChange={setDraft}
+                    onChange={updateDraft}
+                    scrollRef={scrollerRef}
+                    onReady={() => applyScroll(scrollerRef.current, "other", true)}
                   />
                 )
               ) : activeDoc.error ? (
                 <ErrorState title={`Couldn't open ${activeDoc.name}`} detail={activeDoc.error} />
               ) : activeDoc.kind === "markdown" ? (
                 <div className="reading">
-                  <div className="pane" ref={scrollerRef as React.RefObject<HTMLDivElement>}>
+                  <div className="pane" ref={scrollerRef as RefObject<HTMLDivElement>}>
                     <div className="prose-wrap">
                       <MarkdownView content={activeDoc.content} proseRef={proseRef} />
                     </div>
@@ -697,15 +799,15 @@ export default function App() {
                   <Outline headings={headings} activeId={activeId} onJump={jumpTo} open={canOutline && outlineOpen} />
                 </div>
               ) : activeDoc.kind === "json" ? (
-                <div className="pane json-pane" ref={scrollerRef as React.RefObject<HTMLDivElement>}>
+                <div className="pane json-pane" ref={scrollerRef as RefObject<HTMLDivElement>}>
                   <JsonView key={`${activeDoc.path}:${jsonDepth}`} content={activeDoc.content} openDepth={jsonDepth} />
                 </div>
               ) : activeDoc.kind === "csv" ? (
-                <div className="pane" ref={scrollerRef as React.RefObject<HTMLDivElement>}>
+                <div className="pane" ref={scrollerRef as RefObject<HTMLDivElement>}>
                   <CsvTable content={activeDoc.content} />
                 </div>
               ) : (
-                <div className="pane" ref={scrollerRef as React.RefObject<HTMLDivElement>}>
+                <div className="pane" ref={scrollerRef as RefObject<HTMLDivElement>}>
                   <pre className="raw selectable">{activeDoc.content}</pre>
                 </div>
               )}

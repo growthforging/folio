@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import {
+  Check,
   ChevronsDownUp,
   ChevronsUpDown,
   CodeXml,
@@ -35,11 +36,16 @@ interface Props {
 export function Toolbar({ doc, editing, dirty, mdMode, outlineOpen, canOutline, sidebarOpen, run }: Props) {
   const moreRef = useRef<HTMLButtonElement>(null);
   const [more, setMore] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    run("copy");
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1400);
+  };
   const k = KIND[doc.kind];
   const Icon = k.icon;
 
   const moreItems: MenuEntry[] = [
-    { id: "copy", label: "Copy Contents", icon: Copy, onSelect: () => run("copy") },
     ...(!isUntitled(doc.path)
       ? [{ id: "copy-path", label: "Copy Path", onSelect: () => run("copy-path") } as MenuEntry]
       : []),
@@ -70,6 +76,13 @@ export function Toolbar({ doc, editing, dirty, mdMode, outlineOpen, canOutline, 
 
       <div className="tb-group">
         <IconButton icon={Search} label="Find" kbd="⌘F" onClick={() => run("find")} />
+        <IconButton
+          icon={copied ? Check : Copy}
+          iconKey={copied ? "check" : "copy"}
+          label={copied ? "Copied" : "Copy contents"}
+          className={copied ? "ok" : undefined}
+          onClick={copy}
+        />
         {canOutline && (
           <IconButton
             icon={ListTree}

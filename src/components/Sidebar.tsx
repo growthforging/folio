@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { Braces, Command, Copy, Eye, FileText, FolderOpen, PanelLeftClose, Plus, X } from "lucide-react";
 import { KIND, dirOf, isUntitled, isVirtual, type Doc } from "../lib/docs";
 import type { Run, ThemePref } from "../lib/commands";
@@ -19,21 +19,11 @@ interface Props {
   run: Run;
 }
 
-type Box = { top: number; h: number };
-
 export function Sidebar({ docs, active, dirtyPath, open, width, onWidth, theme, onTheme, run }: Props) {
-  const itemRefs = useRef(new Map<string, HTMLLIElement>());
-  const [hover, setHover] = useState<Box | null>(null);
-  const [act, setAct] = useState<Box | null>(null);
   const [ctx, setCtx] = useState<{ path: string; x: number; y: number } | null>(null);
   const [newOpen, setNewOpen] = useState(false);
   const newRef = useRef<HTMLButtonElement>(null);
   const [resizing, setResizing] = useState(false);
-
-  useLayoutEffect(() => {
-    const el = active ? itemRefs.current.get(active) : undefined;
-    setAct(el ? { top: el.offsetTop, h: el.offsetHeight } : null);
-  }, [active, docs, width]);
 
   const startResize = (e: ReactPointerEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -100,33 +90,18 @@ export function Sidebar({ docs, active, dirtyPath, open, width, onWidth, theme, 
           <span className="count">{docs.length}</span>
         </div>
 
-        <ul className="sb-list" onMouseLeave={() => setHover(null)}>
-          <span
-            className={`sb-glide sb-glide-hover${hover ? " on" : ""}`}
-            style={hover ? { transform: `translateY(${hover.top}px)`, height: hover.h } : undefined}
-          />
-          <span
-            className={`sb-glide sb-glide-active${act ? " on" : ""}`}
-            style={act ? { transform: `translateY(${act.top}px)`, height: act.h } : undefined}
-          />
+        <ul className="sb-list">
           {docs.map((d) => {
             const k = KIND[d.kind];
             const Icon = k.icon;
             const dirty = d.path === dirtyPath;
+            const isActive = d.path === active;
             return (
               <li
                 key={d.path}
-                ref={(el) => {
-                  if (el) itemRefs.current.set(d.path, el);
-                  else itemRefs.current.delete(d.path);
-                }}
-                className={`sb-item${d.path === active ? " active" : ""}${dirty ? " dirty" : ""}`}
+                className={`sb-item${isActive ? " active" : ""}${dirty ? " dirty" : ""}`}
                 tabIndex={0}
-                aria-current={d.path === active ? "true" : undefined}
-                onMouseEnter={(e) => {
-                  const el = e.currentTarget;
-                  setHover({ top: el.offsetTop, h: el.offsetHeight });
-                }}
+                aria-current={isActive ? "true" : undefined}
                 onClick={() => run("select-doc", d.path)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") run("select-doc", d.path);

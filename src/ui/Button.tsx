@@ -15,10 +15,12 @@ interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   active?: boolean;
   size?: number;
   tipPlace?: "top" | "bottom";
+  /** Change this to re-mount (and animate) the icon, e.g. copy → check. */
+  iconKey?: string;
 }
 
 export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
-  { icon: Icon, label, kbd, active, size = 15, tipPlace, className = "", ...rest },
+  { icon: Icon, label, kbd, active, size = 15, tipPlace, iconKey, className = "", ...rest },
   ref
 ) {
   return (
@@ -31,9 +33,10 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
       data-tip={label}
       data-kbd={kbd}
       data-tip-place={tipPlace}
+      data-swap={iconKey !== undefined ? "" : undefined}
       {...rest}
     >
-      <Icon size={size} strokeWidth={1.8} />
+      <Icon key={iconKey} size={size} strokeWidth={1.8} />
     </button>
   );
 });

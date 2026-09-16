@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, type RefObject } from "react";
 import { EditorState } from "@codemirror/state";
 import {
   EditorView,
@@ -77,13 +77,22 @@ interface Props {
   value: string;
   language: "markdown" | "json" | "text";
   onChange: (v: string) => void;
+  onReady?: () => void;
+  scrollRef?: RefObject<HTMLElement | null>;
 }
 
-export const Editor = forwardRef<EditorHandle, Props>(function Editor({ value, language, onChange }, ref) {
+export const Editor = forwardRef<EditorHandle, Props>(function Editor(
+  { value, language, onChange, onReady, scrollRef },
+  ref
+) {
   const host = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
+  const onReadyRef = useRef(onReady);
+  onReadyRef.current = onReady;
+  /** The last value we emitted, so a debounced echo from the parent never overwrites newer typing. */
+  const emitted = useRef(value);
 
   useImperativeHandle(
     ref,
@@ -110,7 +119,11 @@ export const Editor = forwardRef<EditorHandle, Props>(function Editor({ value, l
       keymap.of([...closeBracketsKeymap, ...defaultKeymap, ...searchKeymap, ...historyKeymap, indentWithTab]),
       theme,
       EditorView.updateListener.of((u) => {
-        if (u.docChanged) onChangeRef.current(u.state.doc.toString());
+        if (u.docChanged) {
+          const text = u.state.doc.toString();
+          emitted.current = text;
+          onChangeRef.current(text);
+        }
       }),
     ];
     const langExt =
@@ -133,7 +146,9 @@ export const Editor = forwardRef<EditorHandle, Props>(function Editor({ value, l
       parent: host.current,
     });
     viewRef.current = view;
+    if (scrollRef) scrollRef.current = view.scrollDOM;
     view.focus();
+    onReadyRef.current?.();
     return () => {
       view.destroy();
       viewRef.current = null;
@@ -144,7 +159,9 @@ export const Editor = forwardRef<EditorHandle, Props>(function Editor({ value, l
   // Sync external content changes (e.g. JSON "Format") back into the editor.
   useEffect(() => {
     const view = viewRef.current;
-    if (view && value !== view.state.doc.toString()) {
+    if (!view || value === emitted.current) return;
+    if (value !== view.state.doc.toString()) {
+      emitted.current = value;
       view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: value } });
     }
   }, [value]);
